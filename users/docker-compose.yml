@@ -1,58 +1,35 @@
+
+
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file: .env
+    build: .
+    env_file: ../.env
     environment:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=123456
-      - DB_NAME=flight-connector
+      - DB_NAME=GozonShop
       - PORT=3202
     ports:
-      - "3202:3202"
+      - '3202:3202'
     volumes:
-      - ./src:/app/src
-      - ./config:/app/config
+      - ./:/app
       - /app/node_modules
-    restart: unless-stopped
     depends_on:
-      redis:
-        condition: service_healthy
       db:
         condition: service_healthy
 
   db:
-    platform: linux/arm64
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: flight-connector
+      POSTGRES_DB: GozonShop
     ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - '5444:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d flight-connector"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  test-db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: flight-connector-test
-    ports:
-      - "5434:5432"
-    volumes:
-      - test_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d flight-connector-test"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d GozonShop']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -60,47 +37,9 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - '6379:6379'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 3
-
-  test-redis:
-    image: redis:7-alpine
-    ports:
-      - "6380:6379"
-    volumes:
-      - test_redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-
-  test-runner:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    depends_on:
-      test-db:
-        condition: service_healthy
-      test-redis:
-        condition: service_healthy
-    environment:
-      - NODE_ENV=test
-      - DB_HOST=test-db
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=123456
-      - DB_NAME=flight-connector-test
-    command: npm test
-
-volumes:
-  redis_data:
-  postgres_data:
-  test_redis_data:
-  test_postgres_data:
