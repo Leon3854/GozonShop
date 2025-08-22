@@ -1,20 +1,24 @@
-
-
 services:
   app:
     build: .
     env_file: ../.env
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=123456
-      - DB_NAME=GozonShop
-      - PORT=3202
+      - DOCKER_CONTAINER=true
+      - DATABASE_URL=postgresql://postgres:123456@db:5432/GozonShop?schema=public
+        # - DB_HOST=db
+        # - DB_PORT=5432
+        # - DB_USER=postgres
+        # - DB_PASSWORD=123456
+        # - DB_NAME=GozonShop
+        # - PORT=3202
+        # - DOCKER_CONTAINER=true
+        # - DATABASE_URL=${DATABASE_URL_DOCKER}
+        # - REDIS_HOST=${REDIS_HOST_DOCKER}
+        # - DATABASE_URL=postgresql://postgres:123456@db:5432/GozonShop?schema=public
     ports:
       - '3202:3202'
     volumes:
-      - ./:/app
+      - .:/app
       - /app/node_modules
     depends_on:
       db:

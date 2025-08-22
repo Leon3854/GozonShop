@@ -2,6 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2022",
+    "types": ["node"],
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": "./",
@@ -9,17 +10,18 @@
       "@/*": ["src/*"]
     },
     "esModuleInterop": true,
-    "strict": true,
+    // "strict": true,
     "skipLibCheck": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
-
-
 
 // {
 //   "compilerOptions": {
