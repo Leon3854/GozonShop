@@ -1,6 +1,101 @@
 services:
+  # User Service (микросервис пользователей)
+  user-service:
+    build: ./users # путь к папке user-service
+    container_name: users
+    env_file: .env # общий .env файл
+    environment:
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@user-db:5432/user_db
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    ports:
+      - "3001:3000" # внешний порт:внутренний порт
+    depends_on:
+      user-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Auth Service (микросервис аутентификации)
+  auth-service:
+    build: ./auth # путь к папке auth-service
+    container_name: auth
+    env_file: .env # общий .env файл
+    environment:
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@auth-db:5432/auth_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    ports:
+      - "3002:3000" # внешний порт:внутренний порт
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672" # порт для подключения
+      - "15672:15672" # порт для веб-интерфейса
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # База данных для User Service
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: user_db
+    ports:
+      - "5433:5432" # внешний порт 5433 для user-db
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # База данных для Auth Service
+  auth-db:
+    image: postgres:15-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: auth_db
+    ports:
+      - "5434:5432" # внешний порт 5434 для auth-db
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis (у вас уже есть, оставляем)
   redis:
     image: redis:7-alpine
+    container_name: redis
     ports:
       - "6379:6379"
     volumes:
@@ -11,3 +106,9 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+
+# Тома для постоянного хранения данных
+volumes:
+  user_db_data:
+  auth_db_data:
+  redis_data:
