@@ -4,13 +4,14 @@ import {
   Post,
   Delete,
   Param,
-  Body,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUsersDto } from '../dto/create-users.dto';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -21,12 +22,12 @@ export class UsersController {
 
   @Get(':id')
   async getById(@Param('id') id: string) {
-    return this.usersService.findById(+id);
+    return this.usersService.findById(id);
   }
 
-  @Post()
-  async create(@Body() dto: CreateUsersDto) {
-    return this.usersService.create(dto);
+  @Get('email/:email')
+  async getByEmail(@Param('email') email: string) {
+    return this.usersService.findByEmail(email);
   }
 
   @Post('batch/:count')
@@ -41,6 +42,6 @@ export class UsersController {
 
   @Delete(':id')
   async deleteById(@Param('id') id: string) {
-    return await this.usersService.deleteById(+id);
+    return await this.usersService.deleteById(id);
   }
 }

@@ -1,11 +1,12 @@
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma.service';
-import { loadConfig } from './config/configuration';
+
+dotenv.config({ path: resolve(__dirname, '../../../.env') });
 
 async function bootstrap(): Promise<void> {
-  loadConfig();
-
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
@@ -15,9 +16,9 @@ async function bootstrap(): Promise<void> {
   prismaService.enableShutdownHooks(app);
 
   // Используем порт из .env или 3202 по умолчанию
-  await app.listen(process.env.PORT || 3202);
+  await app.listen(3000);
 
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  console.log('Application is running on port 3000');
 }
 
 bootstrap()
