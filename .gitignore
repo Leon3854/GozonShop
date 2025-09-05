@@ -2,6 +2,7 @@ node_modules
 
 *.txt
 *.local.txt
+*.local
 .DS_Store
 auth/docker-compose.yml
 users/docker-compose.yml
